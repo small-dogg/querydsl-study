@@ -4,23 +4,22 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ExpressionUtils;
-import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.SubQueryExpression;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.smalldogg.study.querydsl.dto.MemberDto;
-import com.smalldogg.study.querydsl.dto.QMemberDto;
 import com.smalldogg.study.querydsl.dto.UserDto;
+import com.smalldogg.study.querydsl.dto.QMemberDto;
 import com.smalldogg.study.querydsl.entity.Member;
 import com.smalldogg.study.querydsl.entity.QMember;
+import com.smalldogg.study.querydsl.entity.QTeam;
 import com.smalldogg.study.querydsl.entity.Team;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,8 +30,6 @@ import javax.persistence.PersistenceUnit;
 import java.util.List;
 
 import static com.querydsl.jpa.JPAExpressions.*;
-import static com.smalldogg.study.querydsl.entity.QMember.member;
-import static com.smalldogg.study.querydsl.entity.QTeam.team;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -79,8 +76,8 @@ public class QuerydslBasicTest {
     @Test
     void startQueryDsl() {
         Member findMember = queryFactory
-                .selectFrom(member)
-                .where(member.username.eq("member1"))//파라미터 바인딩 처리
+                .selectFrom(QMember.member)
+                .where(QMember.member.username.eq("member1"))//파라미터 바인딩 처리
                 .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo("member1");
@@ -89,9 +86,9 @@ public class QuerydslBasicTest {
     @Test
     void search() {
         Member findMember = queryFactory
-                .selectFrom(member)
-                .where(member.username.eq("member1")
-                        .and(member.age.eq(10)))
+                .selectFrom(QMember.member)
+                .where(QMember.member.username.eq("member1")
+                        .and(QMember.member.age.eq(10)))
                 .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo("member1");
@@ -100,10 +97,10 @@ public class QuerydslBasicTest {
     @Test
     void searchAndParam() {
         Member findMember = queryFactory
-                .selectFrom(member)
+                .selectFrom(QMember.member)
                 .where(
-                        member.username.eq("member1"),
-                        member.age.eq(10))
+                        QMember.member.username.eq("member1"),
+                        QMember.member.age.eq(10))
                 .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo("member1");
@@ -112,30 +109,30 @@ public class QuerydslBasicTest {
     @Test
     void resultFetch() {
         List<Member> fetch = queryFactory
-                .selectFrom(member)
+                .selectFrom(QMember.member)
                 .fetch();
 
         Member fetchOne = queryFactory
-                .selectFrom(member)
+                .selectFrom(QMember.member)
                 .fetchOne();
 
         Member fetchFirst = queryFactory
-                .selectFrom(member)
+                .selectFrom(QMember.member)
 //                .limit(1).fetch()
                 .fetchFirst();
 
         QueryResults<Member> result = queryFactory
-                .selectFrom(member)
+                .selectFrom(QMember.member)
                 .fetchResults();
         result.getTotal();
 
         queryFactory
-                .selectFrom(member)
+                .selectFrom(QMember.member)
                 .fetchCount();
 
         Long totalCount = queryFactory
-                .select(member.count())
-                .from(member)
+                .select(QMember.member.count())
+                .from(QMember.member)
                 .fetchOne();
     }
 
@@ -152,9 +149,9 @@ public class QuerydslBasicTest {
         em.persist(new Member("member6", 100));
 
         List<Member> result = queryFactory
-                .selectFrom(member)
-                .where(member.age.eq(100))
-                .orderBy(member.age.desc(), member.username.asc().nullsLast())
+                .selectFrom(QMember.member)
+                .where(QMember.member.age.eq(100))
+                .orderBy(QMember.member.age.desc(), QMember.member.username.asc().nullsLast())
                 .fetch();
 
         Member member5 = result.get(0);
@@ -168,8 +165,8 @@ public class QuerydslBasicTest {
     @Test
     void paging1() {
         List<Member> result = queryFactory
-                .selectFrom(member)
-                .orderBy(member.username.desc())
+                .selectFrom(QMember.member)
+                .orderBy(QMember.member.username.desc())
                 .offset(1)
                 .limit(2)
                 .fetch();
@@ -180,8 +177,8 @@ public class QuerydslBasicTest {
     @Test
     void paging2() {
         QueryResults<Member> queryResults = queryFactory
-                .selectFrom(member)
-                .orderBy(member.username.desc())
+                .selectFrom(QMember.member)
+                .orderBy(QMember.member.username.desc())
                 .offset(1)
                 .limit(2)
                 .fetchResults();
@@ -196,21 +193,21 @@ public class QuerydslBasicTest {
     void aggregation() {
         List<Tuple> result = queryFactory
                 .select(
-                        member.count(),
-                        member.age.sum(),
-                        member.age.avg(),
-                        member.age.max(),
-                        member.age.min()
+                        QMember.member.count(),
+                        QMember.member.age.sum(),
+                        QMember.member.age.avg(),
+                        QMember.member.age.max(),
+                        QMember.member.age.min()
                 )
-                .from(member)
+                .from(QMember.member)
                 .fetch();
 
         Tuple tuple = result.get(0);
-        assertThat(tuple.get(member.count())).isEqualTo(4);
-        assertThat(tuple.get(member.age.sum())).isEqualTo(100);
-        assertThat(tuple.get(member.age.avg())).isEqualTo(25);
-        assertThat(tuple.get(member.age.max())).isEqualTo(40);
-        assertThat(tuple.get(member.age.min())).isEqualTo(10);
+        Assertions.assertThat(tuple.get(QMember.member.count())).isEqualTo(4);
+        Assertions.assertThat(tuple.get(QMember.member.age.sum())).isEqualTo(100);
+        Assertions.assertThat(tuple.get(QMember.member.age.avg())).isEqualTo(25);
+        Assertions.assertThat(tuple.get(QMember.member.age.max())).isEqualTo(40);
+        Assertions.assertThat(tuple.get(QMember.member.age.min())).isEqualTo(10);
 
     }
 
@@ -220,19 +217,19 @@ public class QuerydslBasicTest {
     @Test
     void group() {
         List<Tuple> result = queryFactory
-                .select(team.name, member.age.avg())
-                .from(member)
-                .join(member.team, team)
-                .groupBy(team.name)
+                .select(QTeam.team.name, QMember.member.age.avg())
+                .from(QMember.member)
+                .join(QMember.member.team, QTeam.team)
+                .groupBy(QTeam.team.name)
                 .fetch();
 
         Tuple teamA = result.get(0);
         Tuple teamB = result.get(1);
 
-        assertThat(teamA.get(team.name)).isEqualTo("teamA");
-        assertThat(teamA.get(member.age.avg())).isEqualTo(15);
-        assertThat(teamB.get(team.name)).isEqualTo("teamB");
-        assertThat(teamB.get(member.age.avg())).isEqualTo(35);
+        Assertions.assertThat(teamA.get(QTeam.team.name)).isEqualTo("teamA");
+        Assertions.assertThat(teamA.get(QMember.member.age.avg())).isEqualTo(15);
+        Assertions.assertThat(teamB.get(QTeam.team.name)).isEqualTo("teamB");
+        Assertions.assertThat(teamB.get(QMember.member.age.avg())).isEqualTo(35);
     }
 
     /**
@@ -241,9 +238,9 @@ public class QuerydslBasicTest {
     @Test
     void join() {
         List<Member> result = queryFactory
-                .selectFrom(member)
-                .join(member.team, team)
-                .where(team.name.eq("teamA"))
+                .selectFrom(QMember.member)
+                .join(QMember.member.team, QTeam.team)
+                .where(QTeam.team.name.eq("teamA"))
                 .fetch();
 
         assertThat(result)
@@ -264,9 +261,9 @@ public class QuerydslBasicTest {
         em.persist(new Member("teamC"));
 
         List<Member> result = queryFactory
-                .select(member)
-                .from(member, team)
-                .where(member.username.eq(team.name))
+                .select(QMember.member)
+                .from(QMember.member, QTeam.team)
+                .where(QMember.member.username.eq(QTeam.team.name))
                 .fetch();
 
         assertThat(result)
@@ -281,10 +278,10 @@ public class QuerydslBasicTest {
     @Test
     void join_on_filtering() {
         List<Tuple> result = queryFactory
-                .select(member, team)
-                .from(member)
-                .leftJoin(member.team, team)
-                .on(team.name.eq("teamA"))
+                .select(QMember.member, QTeam.team)
+                .from(QMember.member)
+                .leftJoin(QMember.member.team, QTeam.team)
+                .on(QTeam.team.name.eq("teamA"))
                 .fetch();
 
         for (Tuple tuple : result) {
@@ -303,9 +300,9 @@ public class QuerydslBasicTest {
         em.persist(new Member("teamC"));
 
         List<Tuple> result = queryFactory
-                .select(member, team)
-                .from(member)
-                .leftJoin(team).on(member.username.eq(team.name))
+                .select(QMember.member, QTeam.team)
+                .from(QMember.member)
+                .leftJoin(QTeam.team).on(QMember.member.username.eq(QTeam.team.name))
                 .fetch();
 
         for (Tuple tuple : result) {
@@ -322,8 +319,8 @@ public class QuerydslBasicTest {
         em.clear();
 
         Member findMember = queryFactory
-                .selectFrom(member)
-                .where(member.username.eq("member1"))
+                .selectFrom(QMember.member)
+                .where(QMember.member.username.eq("member1"))
                 .fetchOne();
 
         boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
@@ -337,9 +334,9 @@ public class QuerydslBasicTest {
         em.clear();
 
         Member findMember = queryFactory
-                .selectFrom(member)
-                .join(member.team, team).fetchJoin() //페치조인 적용
-                .where(member.username.eq("member1"))
+                .selectFrom(QMember.member)
+                .join(QMember.member.team, QTeam.team).fetchJoin() //페치조인 적용
+                .where(QMember.member.username.eq("member1"))
                 .fetchOne();
 
         boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
@@ -356,8 +353,8 @@ public class QuerydslBasicTest {
         QMember memberSub = new QMember("memberSub");
 
         List<Member> result = queryFactory
-                .selectFrom(member)
-                .where(member.age.eq(
+                .selectFrom(QMember.member)
+                .where(QMember.member.age.eq(
                         select(memberSub.age.max())
                                 .from(memberSub)
                 ))
@@ -377,8 +374,8 @@ public class QuerydslBasicTest {
         QMember memberSub = new QMember("memberSub");
 
         List<Member> result = queryFactory
-                .selectFrom(member)
-                .where(member.age.goe(
+                .selectFrom(QMember.member)
+                .where(QMember.member.age.goe(
                         select(memberSub.age.avg())
                                 .from(memberSub)
                 ))
@@ -397,8 +394,8 @@ public class QuerydslBasicTest {
         QMember memberSub = new QMember("memberSub");
 
         List<Member> result = queryFactory
-                .selectFrom(member)
-                .where(member.age.in(
+                .selectFrom(QMember.member)
+                .where(QMember.member.age.in(
                         select(memberSub.age)
                                 .from(memberSub)
                                 .where(memberSub.age.gt(10))
@@ -414,9 +411,9 @@ public class QuerydslBasicTest {
         QMember memberSub = new QMember("memberSub");
 
         List<Tuple> result = queryFactory
-                .select(member.username,
+                .select(QMember.member.username,
                         select(memberSub.age.avg()).from(memberSub))
-                .from(member)
+                .from(QMember.member)
                 .fetch();
 
         for (Tuple tuple : result) {
@@ -429,12 +426,12 @@ public class QuerydslBasicTest {
     void basicCase() {
 
         List<String> result = queryFactory
-                .select(member.age
+                .select(QMember.member.age
                         .when(10).then("열살")
                         .when(20).then("스무살")
                         .otherwise("기타")
                 )
-                .from(member)
+                .from(QMember.member)
                 .fetch();
 
         for (String s : result) {
@@ -446,10 +443,10 @@ public class QuerydslBasicTest {
     void complexCase() {
         List<String> result = queryFactory
                 .select(new CaseBuilder()
-                        .when(member.age.between(10, 20)).then("0~20살")
-                        .when(member.age.between(21, 30)).then("21~30살")
+                        .when(QMember.member.age.between(10, 20)).then("0~20살")
+                        .when(QMember.member.age.between(21, 30)).then("21~30살")
                         .otherwise("기타")
-                ).from(member)
+                ).from(QMember.member)
                 .fetch();
 
         for (String s : result) {
@@ -460,8 +457,8 @@ public class QuerydslBasicTest {
     @Test
     void constant() {
         List<Tuple> result = queryFactory
-                .select(member.username, Expressions.constant("A"))
-                .from(member)
+                .select(QMember.member.username, Expressions.constant("A"))
+                .from(QMember.member)
                 .fetch();
 
         for (Tuple tuple : result) {
@@ -473,9 +470,9 @@ public class QuerydslBasicTest {
     void concat() {
         //{username}_{age}
         List<String> result = queryFactory
-                .select(member.username.concat("_").concat(member.age.stringValue()))
-                .from(member)
-                .where(member.username.eq("member1"))
+                .select(QMember.member.username.concat("_").concat(QMember.member.age.stringValue()))
+                .from(QMember.member)
+                .where(QMember.member.username.eq("member1"))
                 .fetch();
 
         for (String s : result) {
@@ -486,8 +483,8 @@ public class QuerydslBasicTest {
     @Test
     void simpleProjection() {
         List<String> result = queryFactory
-                .select(member.username)
-                .from(member)
+                .select(QMember.member.username)
+                .from(QMember.member)
                 .fetch();
 
         for (String s : result) {
@@ -498,13 +495,13 @@ public class QuerydslBasicTest {
     @Test
     void tupleProjection() {
         List<Tuple> result = queryFactory
-                .select(member.username, member.age)
-                .from(member)
+                .select(QMember.member.username, QMember.member.age)
+                .from(QMember.member)
                 .fetch();
 
         for (Tuple tuple : result) {
-            String username = tuple.get(member.username);
-            Integer age = tuple.get(member.age);
+            String username = tuple.get(QMember.member.username);
+            Integer age = tuple.get(QMember.member.age);
             System.out.println("username = " + username);
             System.out.println("age = " + age);
         }
@@ -525,8 +522,8 @@ public class QuerydslBasicTest {
     @Test
     void findDtoBySetter() {
         List<MemberDto> result = queryFactory
-                .select(Projections.bean(MemberDto.class, member.username, member.age))
-                .from(member)
+                .select(Projections.bean(MemberDto.class, QMember.member.username, QMember.member.age))
+                .from(QMember.member)
                 .fetch();
 
         for (MemberDto memberDto : result) {
@@ -537,8 +534,8 @@ public class QuerydslBasicTest {
     @Test
     void findDtoByField() {
         List<MemberDto> result = queryFactory
-                .select(Projections.fields(MemberDto.class, member.username, member.age))
-                .from(member)
+                .select(Projections.fields(MemberDto.class, QMember.member.username, QMember.member.age))
+                .from(QMember.member)
                 .fetch();
 
         for (MemberDto memberDto : result) {
@@ -549,8 +546,8 @@ public class QuerydslBasicTest {
     @Test
     void findDtoByConstructor() {
         List<MemberDto> result = queryFactory
-                .select(Projections.constructor(MemberDto.class, member.username, member.age))
-                .from(member)
+                .select(Projections.constructor(MemberDto.class, QMember.member.username, QMember.member.age))
+                .from(QMember.member)
                 .fetch();
 
         for (MemberDto memberDto : result) {
@@ -563,13 +560,13 @@ public class QuerydslBasicTest {
         QMember memberSub = new QMember("memberSub");
         List<UserDto> result = queryFactory
                 .select(Projections.fields(UserDto.class,
-                        member.username.as("name"),
+                        QMember.member.username.as("name"),
                         //서브쿼리 결과를 프로젝션으로 받는 경우
                         ExpressionUtils.as(JPAExpressions
                                 .select(memberSub.age.max())
                                 .from(memberSub), "age")
                 ))
-                .from(member)
+                .from(QMember.member)
                 .fetch();
 
         for (UserDto userDto : result) {
@@ -580,8 +577,8 @@ public class QuerydslBasicTest {
     @Test
     void findUserDtoByConstructor() {
         List<UserDto> result = queryFactory
-                .select(Projections.constructor(UserDto.class, member.username, member.age))
-                .from(member)
+                .select(Projections.constructor(UserDto.class, QMember.member.username, QMember.member.age))
+                .from(QMember.member)
                 .fetch();
 
         for (UserDto userDto : result) {
@@ -592,8 +589,8 @@ public class QuerydslBasicTest {
     @Test
     void findDtoByQueryProjection() {
         List<MemberDto> result = queryFactory
-                .select(new QMemberDto(member.username, member.age))
-                .from(member)
+                .select(new QMemberDto(QMember.member.username, QMember.member.age))
+                .from(QMember.member)
                 .fetch();
 
         for (MemberDto memberDto : result) {
@@ -616,15 +613,15 @@ public class QuerydslBasicTest {
     private List<Member> searchMember1(String usernameCond, Integer ageCond) {
         BooleanBuilder builder = new BooleanBuilder();
         if (usernameCond != null) {
-            builder.and(member.username.eq(usernameCond));
+            builder.and(QMember.member.username.eq(usernameCond));
         }
 
         if (ageCond != null) {
-            builder.and(member.age.eq(ageCond));
+            builder.and(QMember.member.age.eq(ageCond));
         }
 
         return queryFactory
-                .selectFrom(member)
+                .selectFrom(QMember.member)
                 .where(builder)
                 .fetch();
     }
@@ -641,7 +638,7 @@ public class QuerydslBasicTest {
 
     private List<Member> searchMember2(String usernameCond, Integer ageCond) {
         return queryFactory
-                .selectFrom(member)
+                .selectFrom(QMember.member)
 //                .where(usernameEq(usernameCond), ageEq(ageCond))
                 .where(allEq(usernameCond,ageCond))
                 .fetch();
@@ -650,11 +647,11 @@ public class QuerydslBasicTest {
     }
 
     private BooleanExpression usernameEq(String usernameCond) {
-        return usernameCond != null ? member.username.eq(usernameCond) : null;
+        return usernameCond != null ? QMember.member.username.eq(usernameCond) : null;
     }
 
     private BooleanExpression ageEq(Integer ageCond) {
-        return ageCond != null ? member.age.eq(ageCond) : null;
+        return ageCond != null ? QMember.member.age.eq(ageCond) : null;
     }
 
     private BooleanExpression allEq(String usernameCond, Integer ageCond){
@@ -668,9 +665,9 @@ public class QuerydslBasicTest {
 
         //영향을 받은 대상의 수
         long count = queryFactory
-                .update(member)
-                .set(member.username, "비회원")
-                .where(member.age.lt(28))
+                .update(QMember.member)
+                .set(QMember.member.username, "비회원")
+                .where(QMember.member.age.lt(28))
                 .execute();
 
         //벌크 연산은 영속성 컨텍스트를 무시하고 DB에 반영하기 때문에, 영속성 컨텍스트를 초기화해줘야함.
@@ -679,7 +676,7 @@ public class QuerydslBasicTest {
         em.clear();
 
         List<Member> result = queryFactory
-                .selectFrom(member)
+                .selectFrom(QMember.member)
                 .fetch();
 
         for (Member member1 : result) {
@@ -690,8 +687,8 @@ public class QuerydslBasicTest {
     @Test
     void bulkAdd() {
         queryFactory
-                .update(member)
-                .set(member.age, member.age.add(1))
+                .update(QMember.member)
+                .set(QMember.member.age, QMember.member.age.add(1))
 //                .set(member.age, member.age.multiply(1))
                 .execute();
     }
@@ -699,8 +696,8 @@ public class QuerydslBasicTest {
     @Test
     void bulkDelete() {
         long count = queryFactory
-                .delete(member)
-                .where(member.age.gt(18))
+                .delete(QMember.member)
+                .where(QMember.member.age.gt(18))
                 .execute();
     }
 
@@ -709,8 +706,8 @@ public class QuerydslBasicTest {
         List<String> result = queryFactory
                 .select(
                         Expressions.stringTemplate("function('replace', {0}, {1}, {2})",
-                                member.username, "member", "M"))
-                .from(member)
+                                QMember.member.username, "member", "M"))
+                .from(QMember.member)
                 .fetch();
 
         for (String s : result) {
@@ -721,9 +718,9 @@ public class QuerydslBasicTest {
     @Test
     void sqlFunction2() {
         List<String> result = queryFactory
-                .select(member.username)
-                .from(member)
-                .where(member.username.eq(member.username.lower())
+                .select(QMember.member.username)
+                .from(QMember.member)
+                .where(QMember.member.username.eq(QMember.member.username.lower())
 //                .where(member.username.eq(Expressions.stringTemplate("function('lower',{0})", member.username))
                 )
                 .fetch();
